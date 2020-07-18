@@ -4,7 +4,7 @@ import time
 import serial
 
 g_terminate_string = bytes([255]) + bytes([255]) + bytes([255])
-g_clear_screen = 'cls WHITE' + g_terminate_string
+g_clear_screen = 'cls WHITE'.encode("utf-8") + g_terminate_string
 g_black_pic_id = '0'
 
 class HWInterface():
@@ -42,7 +42,7 @@ class HWInterface():
             for column in range(self.size_column):
                 if board_state[column][row] == 1:
                     # If the board state is 1, that means to print it
-                    temp_str = command_str + ',' + str(row) + ',' + str(column) + '0,'
+                    temp_str = command_str + str(row) + ',' + str(column) + ',0'
                     self.connection.write(temp_str.encode("utf-8") + g_terminate_string)
 
                 
