@@ -7,13 +7,14 @@ sys.path.append('Classes')
 from Classes import Board, Interface
 
 CURRENT_OS = os.name
-
+BOARD_SIZE_ROW = 300
+BOARD_SIZE_COLUMN = 300
 # Make a X,Y game board. 0,0 is the upper left corner. 
-GameBoard = Board.Board(size_row = 10, size_column = 10)
+GameBoard = Board.Board(size_row = BOARD_SIZE_ROW, size_column = BOARD_SIZE_COLUMN)
 
 # Open HWInterface only on the pi
 if CURRENT_OS == 'posix':
-  HWInterface = Interface.HWInterface(size_row = 10, size_column = 10)
+  HWInterface = Interface.HWInterface(size_row = BOARD_SIZE_ROW, size_column = BOARD_SIZE_COLUMN)
 
 # Seed the board with a pattern
 # TODO: Randomize a starting patern or import/create a known pattern
