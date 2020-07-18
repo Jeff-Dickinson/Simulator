@@ -12,6 +12,11 @@ class Board():
         for i in range(self.size_column):
             for j in range(self.size_row):
                 self.board[i][j] = 0
+        
+        self.buffer = [[0] * size_row for i in range(size_column)]
+        for i in range(self.size_column):
+            for j in range(self.size_row):
+                self.buffer[i][j] = 0
     
     # Main logic loop function. Calls Pre_Update, Update, and Post_Update 
     def Process(self):
@@ -24,39 +29,41 @@ class Board():
         # Does nothing for now
         self.Post_Update()
 
+        return self.board
+
     # Do nothing for now
     def Pre_Update(self):
         print("Pre_Update")
+        self.buffer = self.board
     
     # Checks rules for all cells and updates where necessary
     # TODO: Implement a way to only update cells that need it, save unnecessary processing
     def Update(self):
         print("Update")
-
-        cells_status = [[0] * self.size_row for i in range(self.size_column)]
+        cells = [[0] * self.size_row for i in range(self.size_column)]
         # Loop through all the cells... Boundary cells aren't implemented yet
         for row in range(self.size_row):
             for col in range(self.size_column):
                 var = self.Get_Live_Neighbor_Count(cell_row = row, cell_col = col)
-                #if var != 0:
-                    #print("Cell (col,row): ", col, " ", row, " has ", var , " neighbors")
 
                 # if live and < 2 or > 3, dies
                 if self.board[col][row] == 1 and (var < 2 or var > 3):
-                    cells_status[col][row] = 0
+                    cells[col][row] = 0
 
                 elif self.board[col][row] == 0 and var == 3:
-                    cells_status[col][row] = 1
+                    cells[col][row] = 1
 
                 # if live and 2 or 3, it lives (default)                
                 elif self.board[col][row] == 1 and (var == 2 or var == 3):
-                    cells_status[col][row] = 1
+                    cells[col][row] = 1
                 # if dead and 3, it becomes live
-        
-        # Now update board all at once
+                if var != 0:
+                    print("Cell (col,row): ", col, " ", row, " has ", var , " neighbors")
+                    
         for row in range(self.size_row):
             for col in range(self.size_column):
-                self.board[col][row] = cells_status[col][row]
+                self.board[col][row] = cells[col][row]
+
     # Do nothing for now
     def Post_Update(self):
         print("Post_Update")
@@ -95,7 +102,7 @@ class Board():
             self.board[center_col + 1][center_row + 1] = 1
             self.board[center_col + 1][center_row] = 1
 
-    # Given a center and a radius, this function will return true if the circle stays within the boundary of the board
+    # Given a center and a radius, this function will return true if all of the neighbors are within the boundary of the board
         #
     def Within_Bounds(self, radius, center_row, center_col):
 
@@ -104,18 +111,118 @@ class Board():
         else:
             return False
 
+    # TODO This needs to be revised.
     def Get_Live_Neighbor_Count(self, cell_row, cell_col):
         live_neighbors = 0
         # If it is not a boundary cell, count up its 8 neighbors
-        if ( (cell_row in range(2, self.size_row - 2)) and (cell_col in range(2, self.size_column - 2))):
+        if ( (cell_row in range(1, self.size_row - 1)) and (cell_col in range(1, self.size_column - 1))):
             # Reposition center reference to make looping through the blocks easier
-            row = cell_row - 1
-            col = cell_col - 1
-            for i in range(3):
-                for j in range(3):
-                    live_neighbors += self.board[col + i][row + j]
+            live_neighbors += self.board[cell_col - 1][cell_row - 1]
+            live_neighbors += self.board[cell_col - 1][cell_row]
+            live_neighbors += self.board[cell_col - 1][cell_row + 1]
+            live_neighbors += self.board[cell_col][cell_row - 1]
+            live_neighbors += self.board[cell_col][cell_row + 1]
+            live_neighbors += self.board[cell_col + 1][cell_row - 1]
+            live_neighbors += self.board[cell_col + 1][cell_row]
+            live_neighbors += self.board[cell_col + 1][cell_row + 1]
         
+        # Top left corner
+        elif (cell_row == 0) and (cell_col == 0):
+            live_neighbors += self.board[0][1]
+            live_neighbors += self.board[1][1]
+            live_neighbors += self.board[1][0]
+            live_neighbors += self.board[self.size_column - 1][1]
+            live_neighbors += self.board[self.size_column - 1][0]
+            live_neighbors += self.board[self.size_column - 1][self.size_row - 1]
+            live_neighbors += self.board[0][self.size_row - 1]
+            live_neighbors += self.board[1][self.size_row - 1]
+            #live_neighbors += 1
+
+        # Bottom left corner
+        elif (cell_row == self.size_row - 1) and (cell_col == 0):
+            live_neighbors += self.board[1][self.size_row - 1]
+            live_neighbors += self.board[0][self.size_row - 2]
+            live_neighbors += self.board[1][self.size_row - 2]
+            live_neighbors += self.board[0][0]
+            live_neighbors += self.board[1][0]
+            live_neighbors += self.board[self.size_column - 1][self.size_row - 1]
+            live_neighbors += self.board[self.size_column - 1][0]
+            live_neighbors += self.board[self.size_column - 2][self.size_row - 2]
+            #live_neighbors += 1
+
+        # Top right corner
+        elif (cell_row == 0) and (cell_col == self.size_column - 1):
+            live_neighbors += self.board[self.size_column - 2][0]
+            live_neighbors += self.board[self.size_column - 2][1]
+            live_neighbors += self.board[self.size_column - 1][1]
+            live_neighbors += self.board[self.size_column - 1][self.size_row - 1]
+            live_neighbors += self.board[self.size_column - 2][self.size_row - 1]
+            live_neighbors += self.board[0][0]
+            live_neighbors += self.board[1][0]
+            live_neighbors += self.board[0][self.size_row - 1]
+            #live_neighbors += 1
+
+        # Bottom right corner
+        elif (cell_row == self.size_row - 1) and (cell_col == self.size_column - 1):
+            live_neighbors += self.board[self.size_column - 2][self.size_row - 2]
+            live_neighbors += self.board[self.size_column - 2][self.size_row - 1]
+            live_neighbors += self.board[self.size_column - 1][self.size_row - 2]
+            live_neighbors += self.board[self.size_column - 2][0]
+            live_neighbors += self.board[self.size_column - 1][0]
+            live_neighbors += self.board[0][0]
+            live_neighbors += self.board[0][self.size_row - 1]
+            live_neighbors += self.board[0][self.size_row - 2]
+            #live_neighbors += 1
+        
+        # Left Border
+        elif (cell_col == 0):
+            live_neighbors += self.board[0][cell_row + 1]
+            live_neighbors += self.board[0][cell_row - 1]
+            live_neighbors += self.board[1][cell_row]
+            live_neighbors += self.board[1][cell_row + 1]
+            live_neighbors += self.board[1][cell_row - 1]
+            live_neighbors += self.board[self.size_column - 1][cell_row]
+            live_neighbors += self.board[self.size_column - 1][cell_row + 1]
+            live_neighbors += self.board[self.size_column - 1][cell_row - 1]
+            #live_neighbors += 1
+
+        # Right Border
+        elif (cell_col == self.size_column - 1):
+            live_neighbors += self.board[self.size_column - 1][cell_row - 1]
+            live_neighbors += self.board[self.size_column - 1][cell_row + 1]
+            live_neighbors += self.board[self.size_column - 2][cell_row + 1]
+            live_neighbors += self.board[self.size_column - 2][cell_row]
+            live_neighbors += self.board[self.size_column - 2][cell_row - 1]
+            live_neighbors += self.board[0][cell_row - 1]
+            live_neighbors += self.board[0][cell_row]
+            live_neighbors += self.board[0][cell_row + 1]
+            #live_neighbors += 1
+
+        # Top Border
+        elif (cell_row == 0):
+            live_neighbors += self.board[cell_col - 1][0]
+            live_neighbors += self.board[cell_col - 1][1]
+            live_neighbors += self.board[cell_col - 1][self.size_row - 1]
+            live_neighbors += self.board[cell_col][self.size_row - 1]
+            live_neighbors += self.board[cell_col + 1][self.size_row - 1]
+            live_neighbors += self.board[cell_col][1]
+            live_neighbors += self.board[cell_col + 1][1]
+            live_neighbors += self.board[cell_col + 1][0]
+            #live_neighbors += 1
+
+        # Bottom Border
+        elif (cell_row == self.size_row - 1):
+            live_neighbors += self.board[cell_col - 1][self.size_row - 2]
+            live_neighbors += self.board[cell_col - 1][self.size_row - 1]
+            live_neighbors += self.board[cell_col - 1][0]
+            live_neighbors += self.board[cell_col][self.size_row - 2]
+            live_neighbors += self.board[cell_col][0]
+            live_neighbors += self.board[cell_col + 1][self.size_row - 2]
+            live_neighbors += self.board[cell_col + 1][self.size_row - 1]
+            live_neighbors += self.board[cell_col + 1][0]
+            #live_neighbors += 1
+
         # The previous loop would count the cell itself as a neighbor -- Correcting for this
-        live_neighbors -= self.board[cell_col][cell_row]
+        #live_neighbors -= self.board[cell_col][cell_row]
         return live_neighbors
                     
